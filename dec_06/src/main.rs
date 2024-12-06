@@ -14,7 +14,7 @@ fn read() -> (Vec<Vec<i32>>,(i32,i32),(i32,i32)) {
         if input.is_empty() {
             break;
         }
-        let mut row: Vec<i32> = input
+        let row: Vec<i32> = input
             .chars()
             .map(|c| {
                 match c {
@@ -51,7 +51,7 @@ fn read() -> (Vec<Vec<i32>>,(i32,i32),(i32,i32)) {
 fn move_player(map: &Vec<Vec<i32>>, player: (i32,i32), dir: (i32,i32)) -> ((i32,i32),(i32,i32)) {
     let mut new_dir = dir;
     loop{
-        let mut new_player = (player.0 + new_dir.0, player.1 + new_dir.1);
+        let new_player = (player.0 + new_dir.0, player.1 + new_dir.1);
         if new_player.0 < 0 || new_player.0 >= map.len() as i32 || new_player.1 < 0 || new_player.1 >= map[0].len() as i32 {
             return (new_player,dir);
         }
@@ -89,31 +89,6 @@ fn main() {
     // println!("{:?} {:?}", player, dir);
     // print!("{}",map[0].len());
     let mut count = 0;
-    let (pos_set,_) = play(&map, player, dir);
-    let mut checked = HashSet::<(usize,usize)>::new();
-    let mut k = 0;
-    // for (p,d) in &pos_set {
-    //     k += 1;
-    //     let (i,j) = (p.0 + d.0, p.1 + d.1);
-    //     if i < 0 || i >= map.len() as i32 || j < 0 || j >= map[0].len() as i32 {
-    //         continue;
-    //     }
-    //     let (i,j) = (i as usize, j as usize);
-    //     if map[i][j] != 0 {
-    //         continue;
-    //     }
-    //     if checked.contains(&(i,j)) {
-    //         continue;
-    //     }
-    //     map[i][j] = 1;
-    //     let (_,looped) = play(&map, player, dir);
-    //     if looped == 1 {
-    //         count += 1;
-    //         println!("{:5}/{:5}",k, &pos_set.len());
-    //     }
-    //     map[i][j] = 0;
-    //     checked.insert((i,j));
-    // }
     for i in 0..map.len() {
         for j in 0..map[0].len() {
             if map[i][j] != 0 {
@@ -123,7 +98,7 @@ fn main() {
             let (_,looped) = play(&map, player, dir);
             if looped == 1 {
                 count += 1;
-               println!("{:5}/{:5}",j + i * map[0].len(), map.len() * map[0].len());
+                println!("{:5}/{:5}",j + i * map[0].len(), map.len() * map[0].len());
             }
             map[i][j] = 0
         }

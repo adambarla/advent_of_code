@@ -26,23 +26,45 @@ fn read() -> (Vec<Vec<usize>>, Vec<usize>){
     (a,b)
 }
 
-fn test(i:usize, a: &Vec<usize>, b: usize,  sum_tmp:usize) -> bool {
-    if i == a.len() {
-        return sum_tmp == b;
+fn do_op(a:usize, b:usize, op:i32) -> usize {
+    match op {
+        0 => a + b,
+        1 => a * b,
+        2 => {
+            let mut tmp = b;
+            let mut m = 1;
+            while tmp > 0 {
+                m *= 10;
+                tmp /= 10;
+            }
+            m * a + b
+        },
+        _ => 0
     }
-    test(i + 1, a, b, sum_tmp * a[i])
-    || test(i + 1, a, b,sum_tmp+a[i])
+}
+
+fn test(i:usize, a: &Vec<usize>, b: usize,  sum:usize, last_op:i32, tmp_number:usize) -> bool {
+    if i == a.len() {
+        if last_op == -1 {
+            return sum == b;
+        }
+        return do_op(sum, tmp_number, last_op) == b;
+    }
+    if last_op == -1 {
+        return test(i + 1, a, b, sum, 0, a[i])
+            || test(i + 1, a, b, sum, 1, a[i])
+            || test(i + 1, a, b, do_op(sum,a[i],2), -1, 0);
+    }
+    test(i + 1, a, b, do_op(sum, tmp_number, last_op), 0, a[i])
+        || test(i + 1, a, b, do_op(sum, tmp_number, last_op), 1, a[i])
+        || test(i + 1, a, b, do_op(sum, tmp_number, last_op), 2, a[i])
 }
 
 fn main() {
     let (a,b) = read();
-    // println!("{:?}",a);
-    // println!("{:?}",b);
     let mut sum = 0;
     for i in 0..a.len() {
-        // println!("{:?}",a[i]);
-        // println!("{:?}",b[i]);
-        if test(0,&a[i],b[i],0) {
+        if test(1, &a[i], b[i], a[i][0], -1, 0) {
             sum += b[i];
         }
     }

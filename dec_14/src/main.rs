@@ -1,7 +1,6 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io;
-use std::io::{Read, Write};
+use std::io::Read;
 
 #[derive(Debug)]
 struct R{
@@ -45,42 +44,22 @@ fn print(rs: &Vec<R>, w: i32, h: i32) {
     }
 }
 
-fn get_map(rs: &Vec<R> ) -> HashMap<(i32, i32, i32, i32), i32> {
-    let mut m = HashMap::<(i32, i32, i32, i32), i32>::new();
+fn m(rs: &Vec<R>, w: i32, h: i32, i: i32) -> Vec<R> {
+    let mut tmp_rs = Vec::<R>::new();
     for r in rs.iter() {
-        if let Some(val) = m.get_mut(&(r.x, r.y, r.dx, r.dy)) {
-            *val += 1;
-        }
-        else{
-            m.insert((r.x, r.y, r.dx, r.dy), 1);
-        }
+        let x = (r.x + r.dx * i).rem_euclid(w);
+        let y = (r.y + r.dy * i).rem_euclid(h);
+        // *r = R { x, y, dx: r.dx, dy: r.dy };
+        tmp_rs.push(R { x, y, dx: r.dx, dy: r.dy });
     }
-    m
+    tmp_rs
 }
 
-fn cmp_maps(m1: &HashMap<(i32, i32, i32, i32), i32>, m2: &HashMap<(i32, i32, i32, i32), i32>) -> bool {
-    if m1.len() != m2.len() {
-        return false;
-    }
-    for (k, v) in m1.iter() {
-        if let Some(v2) = m2.get(k) {
-            if v != v2 {
-                return false;
-            }
-        }
-        else {
-            return false;
-        }
-    }
-    true
-}
-// 3895
-// 3998
 fn main() {
     let mut s = String::new();
     let file = File::open("in").expect("Failed to open input file");
     io::BufReader::new(file).read_to_string(&mut s).expect("Failed to read input file");
-    let mut rs: Vec<R> = s.lines().map(|line| {
+    let rs: Vec<R> = s.lines().map(|line| {
         let parts: Vec<&str> = line.split_whitespace().collect();
         let p: Vec<i32> = parts[0][2..].split(',').map(|s| s.parse().unwrap()).collect();
         let v: Vec<i32> = parts[1][2..].split(',').map(|s| s.parse().unwrap()).collect();
@@ -91,24 +70,12 @@ fn main() {
     let w = 101; // 11; // 101
     let h = 103; // 7; // 103
 
-    let mut i = 84;
-    // let mut m1 = get_map(&rs);
+    let mut i = 84; // 0 // 7603 for the christmas tree to appear
     loop {
-        let mut tmp_rs = Vec::<R>::new();
-        for r in rs.iter_mut() {
-            let x = (r.x + r.dx * i).rem_euclid(w);
-            let y = (r.y + r.dy * i).rem_euclid(h);
-            // *r = R { x, y, dx: r.dx, dy: r.dy };
-            tmp_rs.push(R { x, y, dx: r.dx, dy: r.dy });
-        }
-        // let mut m2 = get_map(&tmp_rs);
-        // if cmp_maps(&m1, &m2){
-        //     break;
-        // }
         print!("\x1B[2J");
         println!("i: {}", i);
+        let tmp_rs = m(&rs, w, h, i);
         print(&tmp_rs, w, h);
-        io::stdout().flush().expect("Failed to flush stdout");
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("failed to read line");
         let input = input.trim();
@@ -122,13 +89,14 @@ fn main() {
             i += 103;
         }
     }
-    println!("{}", i);
-    // let sec = i;
-    // let mut prod = 1;
-    // let sectors = get_sectors(&mut rs, w, h);
-    // for s in sectors.iter() {
-    //     prod *= s;
-    // }
-    // println!("{}", prod);
+    // part 1
+    let sec = 100;
+    let tmp_rs = m(&rs, w, h, sec);
+    let sectors = get_sectors(&tmp_rs, w, h, 2);
+    let mut prod = 1;
+    for s in sectors.iter() {
+        prod *= s;
+    }
+    println!("{}", prod);
 
 }

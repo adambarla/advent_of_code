@@ -3,12 +3,13 @@ use std::collections::{BinaryHeap, HashMap, VecDeque};
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::panic::panic_any;
 
 static N: i32 = 3;
 
 #[derive(Eq, Ord)]
 struct P { // State of a robot
-    pointed_at: char,
+    head: char,
     last_command: char,
     distance: i32,
 }
@@ -81,42 +82,51 @@ fn dist(
     let first = k==0;
     let pad = if first { kn } else { kd };
     let mut que = BinaryHeap::<P>::new();
-    let mut vis = HashMap::<char,(i32,char)>::new();
+    let mut vis = HashMap::<(char,char),i32>::new();
     que.push(P {
-        pointed_at: s_ch,
+        head: s_ch,
         last_command: 'A',
         distance: 0,
     });
-    vis.insert(s_ch,(0,' '));
+    vis.insert((s_ch,'A'),0);
 
+    let mut best = i32::MAX;
     while let Some(a) = que.pop() {
         // println!("ch({}): {} ch({}): {} d={} \t(s: {} e: {})",k, a.ch, k+1,a.prev, a.d, s_ch, e_ch);
-        if a.pointed_at == e_ch {
+        if a.head == e_ch {
             let d = a.distance + dist(a.last_command, 'A', k + 1, kn, kd, ch2ps, memo);
-            memo.insert((s_ch,e_ch,k), d );
-            return d;
+            if best > d{
+                best = d;
+            }
+            continue;
         }
         for new_command in "<^>v".chars() {
             let (di, dj) = dir2vec(new_command);
-            let p = ch2ps[&(a.pointed_at,first)];
+            let p = ch2ps[&(a.head,first)];
             let new_p = (p.0 + di, p.1 + dj);
             if !is_valid(&pad, new_p) {
                 continue;
             }
-            let new_ch = pad[new_p.0 as usize][new_p.1 as usize];
+            let new_head = pad[new_p.0 as usize][new_p.1 as usize];
             let d = a.distance + dist(a.last_command, new_command, k + 1, kn, kd, ch2ps, memo);
-            if vis.contains_key(&new_ch) && vis[&new_ch].0 >= d {
-                continue;
+            if let Some(&old_cost) = vis.get(&(new_head, new_command)) {
+                if old_cost <= d {
+                    continue;
+                }
             }
             que.push(P {
-                pointed_at: new_ch,
+                head: new_head,
                 last_command: new_command,
                 distance: d,
             });
-            vis.insert(new_ch, (d,a.pointed_at));
+            vis.insert((new_head,new_command), d);
         }
     }
-    panic!("no path");
+    if best == i32::MAX {
+        panic!("no path");
+    }
+    memo.insert((s_ch,e_ch,k), best );
+    best
 }
 
 fn main() {

@@ -1,14 +1,14 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, VecDeque};
+use std::collections::{BinaryHeap, HashMap};
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::panic::panic_any;
 
-static N: i64 = 26;
+static mut N: i64 = 26; // number of robots
 
 #[derive(Eq, Ord)]
-struct P { // State of a robot
+struct P {
+    // State of a robot
     head: char,
     last_command: char,
     distance: i64,
@@ -58,7 +58,7 @@ fn is_valid(v: &Vec<Vec<char>>, p: (i64, i64)) -> bool {
         && p.0 < v.len() as i64
         && p.1 >= 0
         && p.1 < v[p.0 as usize].len() as i64
-        && v[p.0 as usize][p.1 as usize] != ' '
+        && v[p.0 as usize][p.1 as usize] != ' ';
 }
 
 fn dist(
@@ -68,47 +68,47 @@ fn dist(
     kn: &Vec<Vec<char>>,
     kd: &Vec<Vec<char>>,
     ch2ps: &HashMap<(char, bool), (i64, i64)>,
-    memo: &mut HashMap<(char, char, i64), i64>
+    memo: &mut HashMap<(char, char, i64), i64>,
+    n: i64,
 ) -> i64 {
-    if k == N {
+    if k == n {
         return 1;
     }
 
     // println!();
-    if memo.contains_key(&(s_ch,e_ch,k)) {
-        return memo[&(s_ch,e_ch,k)];
+    if memo.contains_key(&(s_ch, e_ch, k)) {
+        return memo[&(s_ch, e_ch, k)];
     }
 
-    let first = k==0;
+    let first = k == 0;
     let pad = if first { kn } else { kd };
     let mut que = BinaryHeap::<P>::new();
-    let mut vis = HashMap::<(char,char),i64>::new();
+    let mut vis = HashMap::<(char, char), i64>::new();
     que.push(P {
         head: s_ch,
         last_command: 'A',
         distance: 0,
     });
-    vis.insert((s_ch,'A'),0);
+    vis.insert((s_ch, 'A'), 0);
 
     let mut best = i64::MAX;
     while let Some(a) = que.pop() {
-        // println!("ch({}): {} ch({}): {} d={} \t(s: {} e: {})",k, a.ch, k+1,a.prev, a.d, s_ch, e_ch);
         if a.head == e_ch {
-            let d = a.distance + dist(a.last_command, 'A', k + 1, kn, kd, ch2ps, memo);
-            if best > d{
+            let d = a.distance + dist(a.last_command, 'A', k + 1, kn, kd, ch2ps, memo, n);
+            if best > d {
                 best = d;
             }
             continue;
         }
         for new_command in "<^>v".chars() {
             let (di, dj) = dir2vec(new_command);
-            let p = ch2ps[&(a.head,first)];
+            let p = ch2ps[&(a.head, first)];
             let new_p = (p.0 + di, p.1 + dj);
             if !is_valid(&pad, new_p) {
                 continue;
             }
             let new_head = pad[new_p.0 as usize][new_p.1 as usize];
-            let d = a.distance + dist(a.last_command, new_command, k + 1, kn, kd, ch2ps, memo);
+            let d = a.distance + dist(a.last_command, new_command, k + 1, kn, kd, ch2ps, memo, n);
             if let Some(&old_cost) = vis.get(&(new_head, new_command)) {
                 if old_cost <= d {
                     continue;
@@ -119,21 +119,22 @@ fn dist(
                 last_command: new_command,
                 distance: d,
             });
-            vis.insert((new_head,new_command), d);
+            vis.insert((new_head, new_command), d);
         }
     }
     if best == i64::MAX {
         panic!("no path");
     }
-    memo.insert((s_ch,e_ch,k), best );
+    memo.insert((s_ch, e_ch, k), best);
     best
 }
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
-    if args.len() != 2 {
-        panic!("usage: program <file>")
+    if args.len() != 3 {
+        panic!("usage: program <file> <N>")
     }
+    let n = args[2].parse::<i64>().expect("usage: program <file> [N]"); // n.o. robots, *3, **26
     let f = File::open(&args[1]).expect("couldn't read file");
     let mut r = BufReader::new(&f);
     let mut codes = Vec::<(i64, Vec<char>)>::new();
@@ -159,16 +160,16 @@ fn main() {
     let mut memo = HashMap::<(char, char, i64), i64>::new();
 
     let mut sum = 0;
-    for (n, code) in codes {
+    for (a, code) in codes {
         let mut part_sum = 0;
         let mut prev = 'A';
         for ch in code {
-            let d = dist(prev, ch, 0, &kn, &kd, &ch2ps, &mut memo);
+            let d = dist(prev, ch, 0, &kn, &kd, &ch2ps, &mut memo, n);
             part_sum += d;
             prev = ch;
         }
-        println!("{} {}",n, part_sum);
-        sum += n *  part_sum;
+        println!("{} {}", a, part_sum);
+        sum += a * part_sum;
     }
     println!("{}", sum);
 }

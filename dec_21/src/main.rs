@@ -5,13 +5,13 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::panic::panic_any;
 
-static N: i32 = 3;
+static N: i64 = 26;
 
 #[derive(Eq, Ord)]
 struct P { // State of a robot
     head: char,
     last_command: char,
-    distance: i32,
+    distance: i64,
 }
 
 impl PartialEq<Self> for P {
@@ -26,22 +26,22 @@ impl PartialOrd for P {
     }
 }
 
-fn get_ch2ps(kn: &Vec<Vec<char>>, kd: &Vec<Vec<char>>) -> HashMap<(char, bool), (i32, i32)> {
-    let mut m = HashMap::<(char, bool), (i32, i32)>::new();
+fn get_ch2ps(kn: &Vec<Vec<char>>, kd: &Vec<Vec<char>>) -> HashMap<(char, bool), (i64, i64)> {
+    let mut m = HashMap::<(char, bool), (i64, i64)>::new();
     for i in 0..kn.len() {
         for j in 0..kn[i].len() {
-            m.insert((kn[i][j], true), (i as i32, j as i32));
+            m.insert((kn[i][j], true), (i as i64, j as i64));
         }
     }
     for i in 0..kd.len() {
         for j in 0..kd[i].len() {
-            m.insert((kd[i][j], false), (i as i32, j as i32));
+            m.insert((kd[i][j], false), (i as i64, j as i64));
         }
     }
     m
 }
 
-fn dir2vec(ch: char) -> (i32, i32) {
+fn dir2vec(ch: char) -> (i64, i64) {
     match ch {
         '<' => (0, -1),
         '^' => (-1, 0),
@@ -53,23 +53,23 @@ fn dir2vec(ch: char) -> (i32, i32) {
     }
 }
 
-fn is_valid(v: &Vec<Vec<char>>, p: (i32, i32)) -> bool {
+fn is_valid(v: &Vec<Vec<char>>, p: (i64, i64)) -> bool {
     return p.0 >= 0
-        && p.0 < v.len() as i32
+        && p.0 < v.len() as i64
         && p.1 >= 0
-        && p.1 < v[p.0 as usize].len() as i32
+        && p.1 < v[p.0 as usize].len() as i64
         && v[p.0 as usize][p.1 as usize] != ' '
 }
 
 fn dist(
     s_ch: char,
     e_ch: char,
-    k: i32,
+    k: i64,
     kn: &Vec<Vec<char>>,
     kd: &Vec<Vec<char>>,
-    ch2ps: &HashMap<(char, bool), (i32, i32)>,
-    memo: &mut HashMap<(char, char, i32), i32>
-) -> i32 {
+    ch2ps: &HashMap<(char, bool), (i64, i64)>,
+    memo: &mut HashMap<(char, char, i64), i64>
+) -> i64 {
     if k == N {
         return 1;
     }
@@ -82,7 +82,7 @@ fn dist(
     let first = k==0;
     let pad = if first { kn } else { kd };
     let mut que = BinaryHeap::<P>::new();
-    let mut vis = HashMap::<(char,char),i32>::new();
+    let mut vis = HashMap::<(char,char),i64>::new();
     que.push(P {
         head: s_ch,
         last_command: 'A',
@@ -90,7 +90,7 @@ fn dist(
     });
     vis.insert((s_ch,'A'),0);
 
-    let mut best = i32::MAX;
+    let mut best = i64::MAX;
     while let Some(a) = que.pop() {
         // println!("ch({}): {} ch({}): {} d={} \t(s: {} e: {})",k, a.ch, k+1,a.prev, a.d, s_ch, e_ch);
         if a.head == e_ch {
@@ -122,7 +122,7 @@ fn dist(
             vis.insert((new_head,new_command), d);
         }
     }
-    if best == i32::MAX {
+    if best == i64::MAX {
         panic!("no path");
     }
     memo.insert((s_ch,e_ch,k), best );
@@ -136,7 +136,7 @@ fn main() {
     }
     let f = File::open(&args[1]).expect("couldn't read file");
     let mut r = BufReader::new(&f);
-    let mut codes = Vec::<(i32, Vec<char>)>::new();
+    let mut codes = Vec::<(i64, Vec<char>)>::new();
     loop {
         let mut s = String::new();
         r.read_line(&mut s).expect("couldn't read line");
@@ -145,7 +145,7 @@ fn main() {
             break;
         }
         let v = s.chars().collect();
-        let n = s[..s.len() - 1].parse::<i32>().unwrap();
+        let n = s[..s.len() - 1].parse::<i64>().unwrap();
         codes.push((n, v));
     }
     let kn: Vec<Vec<char>> = vec![
@@ -156,7 +156,7 @@ fn main() {
     ];
     let kd: Vec<Vec<char>> = vec![vec![' ', '^', 'A'], vec!['<', 'v', '>']];
     let ch2ps = get_ch2ps(&kn, &kd);
-    let mut memo = HashMap::<(char, char, i32), i32>::new();
+    let mut memo = HashMap::<(char, char, i64), i64>::new();
 
     let mut sum = 0;
     for (n, code) in codes {

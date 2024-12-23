@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::Prefix::DeviceNS;
 
 fn f_trs(g: & HashMap<String,HashSet<String>>) -> HashSet<[String;3]> {
     let mut trs = HashSet::<[String;3]>::new();
@@ -19,6 +20,40 @@ fn f_trs(g: & HashMap<String,HashSet<String>>) -> HashSet<[String;3]> {
     trs
 }
 
+fn is_clq(g: &HashMap<String,HashSet<String>>, vs: &Vec<String>) -> bool {
+    for i in 0..vs.len(){
+        for j in i+1..vs.len(){
+            if !g[&vs[i]].contains(&vs[j]) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn f_mclq(g: &HashMap<String,HashSet<String>>, vs: &Vec<String>, subset: &mut Vec<String>, i: usize, k: &mut f64, best: &mut usize) -> Vec<String> {
+    if !is_clq(g,subset){
+        *k += 2_f64.powi((vs.len()-i).try_into().unwrap());
+        println!("{:10}", *k / 2_f64.powi(vs.len() as i32));
+        return Default::default();
+    }
+    if i == vs.len() {
+        *k += 1f64;
+        *best = subset.len();
+        return subset.clone();
+    }
+    if subset.len() + (vs.len() - i - 1) <= *best{
+        return Default::default();
+    }
+    let s1 = f_mclq(g,vs,subset, i+1, k, best);
+    subset.push(vs[i].clone());
+    let s2 = f_mclq(g,vs,subset, i + 1, k, best);
+    subset.pop();
+    if s1.len() >= s2.len() {
+        return s1;
+    }
+    s2
+}
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
@@ -49,17 +84,19 @@ fn main() {
         g.get_mut(&v1).unwrap().insert(v2.clone());
         g.get_mut(&v2).unwrap().insert(v1.clone());
     }
-    let trs = f_trs(&g);
-    let mut sum = 0;
-    for tr in trs {
-        let mut has_t = false;
-        for v in tr {
-            if v.chars().nth(0).unwrap() == 't' {
-                has_t = true;
-                break;
-            }
-        }
-        sum += if has_t {1} else {0};
+
+    let mut vs = Vec::<String>::new();
+    for (v,_) in g.iter() {
+        vs.push(v.clone());
     }
-    println!("{:?}",sum);
+    let mut clq = f_mclq(&g, &vs, &mut Default::default(),0,&mut 0f64, &mut 0);
+    clq.sort();
+    for i in 0..clq.len() {
+        print!("{}",clq[i]);
+        if i != clq.len() -1 {
+            print!(",");
+        }
+    }
+    println!();
+
 }

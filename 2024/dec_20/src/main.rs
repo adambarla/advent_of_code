@@ -106,5 +106,4 @@ fn main() {
         // println!("{}: {}",i, c[i as usize]);
     }
     println!("{}",sum);
-
 }

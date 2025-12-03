@@ -26,31 +26,15 @@ fn main() {
         };
         println!("{:?}",range);
         for i in range[0]..range[1] + 1 {
-            let mut s = i.to_string();
-            for k in 2.. {
-                if s.len() / k < 1 {
-                    break
-                }
-                if s.len() % k != 0 {
-                    continue
-                }
-                let substrs: Vec<String> = s.chars()
-                    .collect::<Vec<char>>().chunks(s.len()/k)
-                    .map(|ch| ch.iter().collect::<String>()).collect();
-                let can = true;
-                for i in 1..substrs.len() {
-                    if substrs[0] != substrs[i] {
-                        can = false;
-                        break
-                    }
-                }
-                if can {
-                    counter += i;
-                    break;
-                }
-            }
+            let s = i.to_string();
+            // prinln!("{}", ln(s.len()))
             if s.len() % 2 != 0 {
                 continue;
+            }
+            let (s_0, s_1) = s.split_at(s.len()/2);
+            if s_0 == s_1 {
+                // println!("{}", s);
+                counter += i;
             }
         }
     }

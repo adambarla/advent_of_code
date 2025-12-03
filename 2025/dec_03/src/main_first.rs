@@ -27,26 +27,20 @@ fn main() {
             println!("finist because len < 2 {:?}", digits);
             break;
         }
-        let n = 12;
-        let mut best = Vec::<usize>::new();
-        let mut last = 0;
-        println!("{:?}",digits);
-        let mut start_idx = 0;
-        for d in 0..n {
-            best.push(start_idx);
-            for i in start_idx..digits.len() - n + d + 1{
-                if digits[i] > digits[best[d]] {
-                    best[d] = i;
-                }
+        let mut best_1 = 0;
+        for i in 1..digits.len()-1 {
+            if digits[i] > digits[best_1] {
+                best_1 = i;
             }
-            start_idx = best[d] + 1;
         }
-
-        let mut num: i64 = 0;
-        for i in 0..best.len() {
-            num += (digits[best[i]] as i64) * 10_i64.pow((n-i-1) as u32);
+        let mut best_2 = best_1 + 1;
+        for i in best_1+1..digits.len() {
+            if digits[i] > digits[best_2] {
+                best_2 = i;
+            }
         }
-        total += num;
+        let num = digits[best_1]*10 + digits[best_2];
+        total += num as i64;
         println!("{}", num);
     }
     println!("{}",total);

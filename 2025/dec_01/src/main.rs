@@ -1,5 +1,5 @@
-use std::fs;
 use std::env;
+use std::fs;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,7 +16,7 @@ fn main() {
     for line in input.split("\n") {
         let dir = match line.chars().nth(0) {
             Some(d) => d,
-            None => break
+            None => break,
         };
         let num = &line[1..].parse::<i32>().unwrap();
         let mut step = 1;

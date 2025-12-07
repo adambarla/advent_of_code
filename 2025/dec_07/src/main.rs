@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fs;
 use std::env;
 
@@ -30,34 +29,38 @@ fn main() {
     let h = grid.len();
     let w = grid[0].len();
     let start = grid[0].iter().position(|c| *c=='S').expect("start not found");
-    println!("start {}", start);
-    let mut beams = HashSet::<usize>::new();
-    beams.insert(start);
-    let mut prev_beams = HashSet::<usize>::new();
+    let mut beams: Vec<i64> = vec![0;w];
+    beams[start] = 1;
     let mut splits = 0;
     for r in 1..h {
-        prev_beams = beams.clone();
-        beams = HashSet::<usize>::new();
-        for b in &prev_beams {
-            if grid[r][*b] == '^' {
-                beams.insert(b-1);
-                beams.insert(b+1);
-                splits += 1;
+        for b in 0..w {
+            if beams[b] == 0 {
+                continue;
             }
-            else {
-                beams.insert(*b);
+            if grid[r][b] == '^' {
+                if b >= 1 {
+                    beams[b-1] += beams[b];
+                }
+                if b+1 < w {
+                    beams[b+1] += beams[b];
+                }
+                beams[b] = 0;
+                splits += 1;
             }
         }
         // println!("{:?}", prev_beams);
         // println!("{:?}", beams);
         for i in 0..w {
-            print!("{}",  if beams.contains(&i) {'|'} else {grid[r][i]} );
+            print!("{}",  if beams[i] != 0 {'|'} else {grid[r][i]} );
         }
+        print!(" {:?}", beams);
         println!();
-        // let new_splits = &beams.len() - &prev_beams.len();
-        // println!("{}", new_splits);
-        // splits += new_splits;
     }
     println!("part 1: {}", splits);
+    let mut timelines = 0;
+    for i in 0..w {
+        timelines += beams[i];
+    }
+    println!("part 2: {}", timelines);
     // println!("{:?}", grid);
 }

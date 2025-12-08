@@ -6,6 +6,8 @@ use std::collections::BinaryHeap;
 use std::cmp::Ordering;
 use std::cmp::min;
 
+const PART:i32 = 2;
+
 fn get_file() -> String {
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
@@ -74,8 +76,11 @@ fn main() {
     println!("{:?}",points.len());
     let n = if points.len() == 20 {10} else {1000};
     let mut count = 0;
-    loop {
-        if q.is_empty() || count >= n {
+    'big : loop {
+        if q.is_empty() {
+            break;
+        }
+        if PART != 2  && count >= n {
             break;
         }
         let s = q.pop().unwrap();
@@ -100,19 +105,31 @@ fn main() {
             e.get_mut(&j).unwrap().insert(i);
         }
         count += 1;
+        if PART != 2 {
+            continue;
+        }
+        // check if we have just one group
+        for i in 0..g_assign.len() {
+            if g_assign[0] != g_assign[i]{
+                continue 'big;
+            }
+        }
+        println!("{:?} {:?}",points[s.pts.0],points[s.pts.1]);
+        println!("part 2: {:?}",points[s.pts.0].0 * points[s.pts.1].0);
+        break;
     }
-    println!("{:?}",g_assign);
+    // println!("{:?}",g_assign);
     // collect groups
     let mut g: Vec<usize> = vec![0;points.len()];
     for i in 0..g_assign.len() {
         g[g_assign[i]] += 1;
     }
     g.sort();
-    println!("{:?}",g);
+    // println!("{:?}",g);
     let mut prod = 1;
     for i in g.len()-3..g.len() {
-        println!("{} ", g[i]);
+        // println!("{} ", g[i]);
         prod *= g[i];
     }
-    println!("{:?}",prod);
+    println!("part 1 (enable PART=1): {:?}",prod);
 }
